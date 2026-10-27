@@ -18,6 +18,7 @@ html,body{margin:0;padding:0;background:#000;}
 </style></head>
 <body>
 <div id="stage">
+  <div id="cam" style="position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:540px 900px;">
   <svg id="art" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="blur18"><feGaussianBlur stdDeviation="18"/></filter>
@@ -46,9 +47,10 @@ html,body{margin:0;padding:0;background:#000;}
     </defs>
     <g id="dyn"></g>
   </svg>
-  <canvas id="grain" width="540" height="960"></canvas>
   <div id="top" class="block" style="top:250px"></div>
   <div id="bot" class="block" style="top:1370px"></div>
+  </div>
+  <canvas id="grain" width="540" height="960"></canvas>
 </div>
 <script>
 // ---------- helpers ----------
@@ -276,15 +278,15 @@ function revealMask(id,p,seed){
 
 // ---------- scenes ----------
 const S=[
- {d:3.3, top:[[["In the","s"],["1960s,","b"]]], bot:[[["farm workers in","s"],["BRAZIL","b"]]], art:'snake1'},
+ {d:3.3, top:[[["In the","s"],["1960s,","b"]]], bot:[[["farm workers in","s"],["BRAZIL","b"]]], art:'snake1', from:[-760,60]},
  {d:3.6, top:[[["were bitten by the","s"]],[["JARARACA","b"]]], bot:[[["a deadly","s"],["PIT VIPER.","b"]]], art:'snake2', noReveal:true},
- {d:3.5, top:[[["Victims would","s"],["COLLAPSE","b"]]], bot:[[["their","s"],["BLOOD PRESSURE","b"]],[["would","s"],["CRASH.","bi"]]], art:'gauge'},
- {d:3.5, top:[[["A young scientist,","s"]],[["SÉRGIO FERREIRA","b"]]], bot:[[["asked one question:","s"],["WHY?","b"]]], art:'micro'},
- {d:4.0, top:[[["Hidden in the","s"],["VENOM","b"]]], bot:[[["was a molecule that","s"],["BLOCKS","b"]],[["an enzyme called","s"],["ACE.","b"]]], art:'venom'},
- {d:3.6, top:[[["Without ACE,","s"]],[["ARTERIES","b"],["RELAX","bi"]]], bot:[[["and blood pressure","s"],["DROPS.","b"]]], art:'artery'},
- {d:3.6, top:[[["Scientists at Squibb","s"]],[["COPIED NATURE","b"]]], bot:[[["and made","s"],["CAPTOPRIL","bi"]],[["the first ACE inhibitor, 1981","s"]]], art:'pill'},
- {d:3.4, top:[[["Today,","s"],["MILLIONS","b"]],[["of people take its","s"]]], bot:[[["descendants","s"],["EVERY DAY.","b"]]], art:'people'},
- {d:3.6, top:[[["A deadly","s"],["BITE","b"]]], bot:[[["became a","s"]],[["LIFESAVING PILL.","bi"]]], art:'final'},
+ {d:3.5, top:[[["Victims would","s"],["COLLAPSE","b"]]], bot:[[["their","s"],["BLOOD PRESSURE","b"]],[["would","s"],["CRASH.","bi"]]], art:'gauge', from:[700,-200]},
+ {d:3.5, top:[[["A young scientist,","s"]],[["SÉRGIO FERREIRA","b"]]], bot:[[["asked one question:","s"],["WHY?","b"]]], art:'micro', from:[-650,250]},
+ {d:4.0, top:[[["Hidden in the","s"],["VENOM","b"]]], bot:[[["was a molecule that","s"],["BLOCKS","b"]],[["an enzyme called","s"],["ACE.","b"]]], art:'venom', from:[0,-800]},
+ {d:3.6, top:[[["Without ACE,","s"]],[["ARTERIES","b"],["RELAX","bi"]]], bot:[[["and blood pressure","s"],["DROPS.","b"]]], art:'artery', from:[-900,0]},
+ {d:3.6, top:[[["Scientists at Squibb","s"]],[["COPIED NATURE","b"]]], bot:[[["and made","s"],["CAPTOPRIL","bi"]],[["the first ACE inhibitor, 1981","s"]]], art:'pill', from:[650,350]},
+ {d:3.4, top:[[["Today,","s"],["MILLIONS","b"]],[["of people take its","s"]]], bot:[[["descendants","s"],["EVERY DAY.","b"]]], art:'people', from:[0,700]},
+ {d:3.6, top:[[["A deadly","s"],["BITE","b"]]], bot:[[["became a","s"]],[["LIFESAVING PILL.","bi"]]], art:'final', from:[-500,-500]},
 ];
 let acc=0;S.forEach(s=>{s.start=acc;acc+=s.d;});
 const TOTAL=acc;
@@ -292,10 +294,10 @@ const TOTAL=acc;
 // build word timing
 S.forEach(sc=>{
   const words=[];
-  let t=0.2;
+  let t=0.42;
   const mk=(lines)=>lines.map(line=>line.map(([txt,k])=>{
     const ws=k==='s'?txt.split(' '):[txt];
-    return {k, ws:ws.map(w=>{const o={w,t}; t+= k==='s'?0.13:0.34; return o;})};
+    return {k, ws:ws.map(w=>{const o={w,t}; t+= k==='s'?0.13:(0.06+0.035*w.length); return o;})};
   }));
   sc.topL=mk(sc.top); t+=0.15; sc.botL=mk(sc.bot);
   const end=t, lim=sc.d-0.55;
@@ -304,7 +306,7 @@ S.forEach(sc=>{
 
 let curScene=-1;
 function buildText(sc){
-  const html=L=>L.map(line=>`<div class="line">`+line.map(tok=>`<span class="tok">`+tok.ws.map(o=>`<span class="w ${tok.k}" data-t="${o.t}">${o.w}</span>`).join('')+`</span>`).join('')+`</div>`).join('');
+  const html=L=>L.map(line=>`<div class="line">`+line.map(tok=>`<span class="tok">`+tok.ws.map(o=>tok.k==='s'?`<span class="w s" data-t="${o.t}">${o.w}</span>`:`<span class="${tok.k}">`+[...o.w].map((ch,ci)=>`<span class="c" style="opacity:0" data-t="${o.t+ci*0.035}">${ch}</span>`).join('')+`</span>`).join('')+`</span>`).join('')+`</div>`).join('');
   document.getElementById('top').innerHTML=html(sc.topL);
   document.getElementById('bot').innerHTML=html(sc.botL);
 }
@@ -339,13 +341,22 @@ function drawArt(sc,lt,gt){
       const rings=[{cx:0,cy:200,rx:175,ry:58},{cx:-4,cy:110,rx:160,ry:52},{cx:4,cy:24,rx:148,ry:48}];
       const sn=snake({rings,neck:"M 118,40 C 210,-20 200,-150 120,-215 C 70,-255 50,-290 62,-330",tail:"M -175,200 C -205,250 -150,285 -70,282",hx:66,hy:-344+Math.sin(lt*2)*4,hr:-10,hs:1.25,mouth:0,tongue:tongueAt(lt,[1.2,2.6]),w:52});
       const glow=`<circle cx="0" cy="-20" r="${f(300+Math.sin(lt*2)*10)}" fill="url(#gGlow)" opacity=".7"/>`;
-      inner=glow+shadow(0,270,260,36)+sn.backs+`<g transform="translate(0,-40)">${capsule(480,100,true)}</g>`+sn.fronts;
+      const pp=clamp((lt-0.55)/0.6);
+      const mk=pp<1?revealMask('rv',pp,77):'';const ma=pp<1?' mask="url(#rv)"':'';
+      inner=glow+shadow(0,270,260,36)+mk+`<g${ma}>${pp>0?sn.backs:''}</g>`+`<g transform="translate(0,-40)">${capsule(480,100,true)}</g>`+`<g${ma}>${pp>0?sn.fronts:''}</g>`;
       break;}
   }
-  const p=sc.noReveal?1:clamp(lt/0.5);
-  let m='',ma='';
-  if(p<1){m=revealMask('rv',p,Math.round(sc.start*100)+3);ma=' mask="url(#rv)"';}
-  return `<g transform="translate(${CX},${CY}) scale(${f(zoom*1000)/1000})">${m}<g${ma}>${pre}${inner}${post}</g></g>`;
+  let whip='',flt='';
+  if(!sc.noReveal){
+    const D=0.38,p=clamp(lt/D),e=eout(p),v=3*Math.pow(1-p,2);
+    const [dx,dy]=sc.from||[-700,0];
+    const ox=(1-e)*dx,oy=(1-e)*dy,s0=0.82+0.18*e;
+    const len=Math.hypot(dx,dy)||1, bl=v*38;
+    if(p<1){flt=`<filter id="mb" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="${f(Math.abs(dx)/len*bl+0.01)} ${f(Math.abs(dy)/len*bl+0.01)}"/></filter>`;}
+    whip=`translate(${f(ox)},${f(oy)}) scale(${f(s0)})`;
+  }
+  const ob=eout((lt-0.25)/0.5);
+  return `<g transform="translate(${CX},${CY}) scale(${f(zoom*1000)/1000})">${flt}<g transform="${whip}"${flt?' filter="url(#mb)"':''}><g opacity="${f(ob)}">${pre}</g>${inner}<g opacity="${f(ob)}">${post}</g></g></g>`;
 }
 
 // grain
@@ -356,10 +367,10 @@ window.TOTAL=TOTAL;
 window.render=function(t){
   const i=sceneAt(t),sc=S[i],lt=t-sc.start;
   if(i!==curScene){buildText(sc);curScene=i;}
-  document.querySelectorAll('.w').forEach(el=>{
-    const x=(lt-parseFloat(el.dataset.t))/0.14;const a=eout(x);
-    el.style.opacity=a; el.style.transform=`translateY(${(1-a)*20}px) scale(${1+(1-a)*0.06})`;
-  });
+  document.querySelectorAll('.w').forEach(el=>{el.style.opacity=eout((lt-parseFloat(el.dataset.t))/0.08);});
+  document.querySelectorAll('.c').forEach(el=>{el.style.opacity=lt>=parseFloat(el.dataset.t)?1:0;});
+  const pe=ease((lt-(sc.d-0.32))/0.32);
+  document.getElementById('cam').style.transform=`scale(${1+0.055*pe})`;
   document.getElementById('dyn').innerHTML=drawArt(sc,lt,t);
   grain(Math.floor(t*30)%12+1);
 };
