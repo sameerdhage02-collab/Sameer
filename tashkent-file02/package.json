@@ -1,0 +1,17 @@
+{
+  "name": "tashkent-file02",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource/mukta": "^5.0.20",
+    "@fontsource/oswald": "^5.0.20",
+    "three": "^0.160.0"
+  }
+}
