@@ -2,7 +2,7 @@
 //        node render.js full [start] [end] -> frames/ JPEGs at 30fps
 const { chromium } = require('playwright');
 const http = require('http'), fs = require('fs'), path = require('path');
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.woff2': 'font/woff2' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.woff2': 'font/woff2', '.json': 'application/json' };
 const srv = http.createServer((q, r) => {
   let p = decodeURIComponent(q.url.split('?')[0]); if (p === '/') p = '/index.html';
   const f = path.join(__dirname, p);
@@ -14,13 +14,13 @@ const srv = http.createServer((q, r) => {
   pg.on('pageerror', e => console.log('PAGEERR', e.message));
   pg.on('console', m => { if (m.type() === 'error') console.log('CONSOLE', m.text()); });
   await pg.goto(`http://localhost:${+process.env.PORT || 8766}/`);
-  await pg.waitForFunction('window.ready', null, { timeout: 120000 });
+  await pg.waitForFunction('window.ready', null, { timeout: 240000 });
   const total = await pg.evaluate('window.TOTAL');
-  fs.writeFileSync('timeline.json', JSON.stringify(await pg.evaluate('({total: window.TOTAL, events: window.EVENTS, segs: window.SEGTIMES})'), null, 1));
+  fs.writeFileSync('timeline.json', JSON.stringify(await pg.evaluate('({total: window.TOTAL, events: window.EVENTS, segs: window.SEGTIMES, shots: window.SHOTTIMES})'), null, 1));
   console.log('TOTAL', total.toFixed(2));
   const mode = process.argv[2] || 'stills';
   if (mode === 'stills') {
-    const times = process.argv[3] ? process.argv[3].split(',').map(Number) : JSON.parse(fs.readFileSync('timeline.json')).segs.map(s => s.start + s.dur * .6);
+    const times = process.argv[3] ? process.argv[3].split(',').map(Number) : JSON.parse(fs.readFileSync('timeline.json')).shots.map(s => s.start + s.dur * .62);
     fs.mkdirSync('stills', { recursive: true });
     for (const [i, t] of times.entries()) { await pg.evaluate(t => window.renderAt(t), t); await pg.screenshot({ path: `stills/s${String(i).padStart(2, '0')}.jpg`, type: 'jpeg', quality: 85 }); }
   } else {

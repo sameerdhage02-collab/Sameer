@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#222}canvas{display:block}</style></head><body>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { PEOPLE, drawPortrait, makeChar } from './people.js';
+const W=1440,H=1280; const cv=document.createElement('canvas'); cv.width=W; cv.height=600; document.body.appendChild(cv);
+const c=cv.getContext('2d'); Object.values(PEOPLE).forEach((p,i)=>{c.save(); c.translate(i*360,0); drawPortrait(c,360,600,p); c.restore();});
+const r=new THREE.WebGLRenderer({antialias:true}); r.setSize(W,680); document.body.appendChild(r.domElement);
+r.outputColorSpace=THREE.SRGBColorSpace; r.toneMapping=THREE.ACESFilmicToneMapping; r.shadowMap.enabled=true;
+const s=new THREE.Scene(); s.background=new THREE.Color(0x30343a);
+s.add(new THREE.HemisphereLight(0xffffff,0x444444,1.2)); const d=new THREE.DirectionalLight(0xffffff,2); d.position.set(2,4,5); d.castShadow=true; d.shadow.bias=-.0005; d.shadow.normalBias=.02; s.add(d);
+const ks=Object.keys(PEOPLE); ks.forEach((k,i)=>{const ch=makeChar(PEOPLE[k]); ch.g.position.set(-1.2+i*.8,0,0); s.add(ch.g);});
+const cam=new THREE.PerspectiveCamera(30,W/680,.1,50); cam.position.set(0,1.75,2.6); cam.lookAt(0,1.6,0);
+r.render(s,cam);
+const s2=new THREE.Scene(); s2.background=new THREE.Color(0x30343a); s2.add(new THREE.HemisphereLight(0xffffff,0x444444,1.2)); const d2=d.clone(); s2.add(d2);
+window.done=true;
+</script></body></html>

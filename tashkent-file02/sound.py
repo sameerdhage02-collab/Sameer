@@ -14,7 +14,7 @@ dr = (np.sin(2*np.pi*55*t) + .7*np.sin(2*np.pi*55.4*t) + .4*np.sin(2*np.pi*82.4*
 air = brown(N) * .5
 fade = np.minimum(1, t / 2) * np.minimum(1, (tl['total'] - t) / 2).clip(0)
 mix[:, 0] += (dr * .05 + air * .05) * fade; mix[:, 1] += (dr * .05 + air * .045) * fade
-# slow heartbeat pulse under everything
+# slow heartbeat pulse under everything (kept soft: narration sits on top)
 for bt in np.arange(1.0, tl['total'] - 1, 1.15):
     for off, g in ((0, 1), (.22, .6)):
         i = int((bt + off) * SR); n = int(.25 * SR)
@@ -45,11 +45,15 @@ def heartstop():
     n = int(2.2 * SR); x = np.arange(n) / SR
     s = np.sin(2*np.pi*220*x) * .4 + np.sin(2*np.pi*440*x) * .1
     return s * np.minimum(1, x / .3) * np.minimum(1, (2.2 - x) / .8) * .12
+def click():
+    n = int(.25 * SR); x = np.arange(n) / SR
+    s = rs.standard_normal(n) * env(n, .0005, .012) + np.sin(2*np.pi*2400*x) * env(n, .001, .03) * .3
+    return s * .25
 def blow():
     n = int(.5 * SR); x = np.arange(n) / SR
     s = lp(rs.standard_normal(n), 6) * np.sin(np.pi * x / .5) ** 1.5
     return s / np.abs(s).max() * .12
-fx = {'crash': (crash, 0), 'horn': (horn, -.3), 'stamp': (stamp, 0), 'whoosh': (whoosh, .2), 'cut': (lambda: whoosh(.5), 0), 'heartstop': (heartstop, 0), 'blow': (blow, 0)}
+fx = {'crash': (crash, 0), 'horn': (horn, -.3), 'stamp': (stamp, 0), 'whoosh': (whoosh, .2), 'cut': (lambda: whoosh(.5), 0), 'heartstop': (heartstop, 0), 'blow': (blow, 0), 'click': (click, .2)}
 for ev in tl['events']:
     f, pan = fx[ev['type']]; sig = f()
     at = ev['t'] - (.35 if ev['type'] == 'cut' else 0)
